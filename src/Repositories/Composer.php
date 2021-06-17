@@ -101,6 +101,15 @@ final class Composer
             return $dependency;
         });
 
+        $collection = $collection->map(function($dependency) {
+            if(!array_key_exists('latest', $dependency)) {
+                $dependency['latest'] = $dependency['version'];
+                $dependency['latest-status'] = 'up-to-date';
+            }
+
+            return $dependency;
+        });
+
         $versions = $collection->keyBy('name')->map(fn ($dependency) => $dependency['latest'])->toArray();
 
         $why     = collect($this->composer->why($versions));
