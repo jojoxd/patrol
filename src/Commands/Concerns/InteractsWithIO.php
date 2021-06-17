@@ -185,22 +185,49 @@ trait InteractsWithIO
                 $terminalWidth - strlen($name) - 11 - strlen($type) - strlen($current) - strlen($latest), 0)
         );
 
+        if($current === $latest) {
+            $dots = str_repeat('.', max(
+                    $terminalWidth - strlen($name) - 9 - strlen($type) - strlen($current), 0)
+            );
+        }
+
         if (empty($dots) && !$this->output->isVerbose()) {
             $type = substr($type, 0, $terminalWidth - strlen($name) - 13 - strlen($current) - strlen($latest)) . '...';
         } else {
             $dots .= ' ';
         }
 
-        $this->output->writeln(sprintf(
-            ' <options=bold;fg=red></><options=bold> %s:</> <fg=#6C7280>%s %s</>%s ➜ <fg=%s;options=%s>%s</>',
+        $color = match ($latestStatus) {
+            'semver-safe-update' => 'yellow',
+            'non-stable' => 'bright-yellow',
+            default => 'red',
+        };
+
+        $format = ' <options=bold;fg=red></><options=bold> %s:</> <fg=#6C7280>%s %s</>%s ➜ <fg=%s;options=%s>%s</>';
+        $args = [
             $name,
             $type,
             $dots,
             ltrim($current, 'v'),
-            $latestStatus !== 'non-stable' && $current === $latest ? 'green' : ($latestStatus === 'semver-safe-update' ? 'yellow' : 'red'),
+            $current === $latest ? 'green' : $color,
             $current === $latest ? '' : 'bold',
-            ltrim($latest, 'v'),
-        ));
+            ltrim($latest, 'v')
+        ];
+
+        if($current === $latest) {
+            $format = ' <options=bold;fg=red></><options=bold> %s:</> <fg=#6C7280>%s %s</> <fg=%s;options=%s>%s</>';
+
+            $args = [
+                $name,
+                $type,
+                $dots,
+                'bright-yellow',
+                $current === $latest ? '' : 'bold',
+                ltrim($latest, 'v')
+            ];
+        }
+
+        $this->output->writeln(sprintf($format, ...$args));
 
         collect($outdated['vulnerabilities'])
             ->each(fn ($vulnerability) => $this->vulnerabilityInfo($vulnerability))

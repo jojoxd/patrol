@@ -51,7 +51,22 @@ final class Composer
             ->filter(
                 fn ($dependency) => !in_array($dependency['name'], $this->mayBeOutdated),
             )->filter(
-                fn ($dependency) => $dependency['latest-status'] !== 'up-to-date',
+                fn ($dependency) => !in_array($dependency['latest-status'], ['up-to-date', 'non-stable']),
+            );
+    }
+
+    /**
+     * Returns all installed, non-stable direct dependencies.
+     *
+     * @return Collection<array<string, string>>
+     */
+    public function nonStable(): Collection
+    {
+        return $this->mutate($this->composer->outdated())
+            ->filter(
+                fn ($dependency) => !in_array($dependency['name'], $this->mayBeOutdated),
+            )->filter(
+                fn ($dependency) => $dependency['latest-status'] === 'non-stable'
             );
     }
 
@@ -103,8 +118,8 @@ final class Composer
 
         $collection = $collection->map(function($dependency) {
             if(!array_key_exists('latest', $dependency)) {
-                $dependency['latest'] = $dependency['version'];
-                $dependency['latest-status'] = 'up-to-date';
+                $dependency['latest'] = null;
+                $dependency['latest-status'] = 'non-stable';
             }
 
             return $dependency;

@@ -66,6 +66,10 @@ final class Score
             $resume .= sprintf(', <fg=yellow>%s outdated</>', $count);
         });
 
+        $this->composer->nonStable()->whenNotEmpty(function ($count) use (&$resume) {
+            $resume .= sprintf(', <fg=bright-yellow>%s non-stable</>', $count);
+        });
+
         $vulnerabilities->whenNotEmpty(function ($count) use (&$resume) {
             $resume .= sprintf(', <fg=red>%s vulnerabilit%s</>', $count, $count > 1 ? 'ies' : 'y');
         });
